@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Agentforce iMessage Demo</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+      background: #fff;
+      height: 100vh;
+    }
+    .app {
+      display: flex;
+      height: 100vh;
+    }
+    .sidebar {
+      width: 320px;
+      border-right: 1px solid #ccc;
+      overflow-y: auto;
+    }
+    .thread {
+      display: flex;
+      justify-content: space-between;
+      padding: 12px 16px;
+      border-bottom: 1px solid #f0f0f0;
+      cursor: pointer;
+      position: relative;
+    }
+    .thread.active { background-color: #f3f7ff; }
+    .thread .left { display: flex; flex-direction: column; }
+    .sender {
+      font-weight: 600;
+      font-size: 15px;
+      color: #000;
+    }
+    .preview {
+      font-size: 13px;
+      color: #6e6e73;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 220px;
+    }
+    .timestamp {
+      font-size: 12px;
+      color: #999;
+      padding-top: 2px;
+    }
+    .unread-dot {
+      width: 8px;
+      height: 8px;
+      background: #007aff;
+      border-radius: 50%;
+      position: absolute;
+      top: 50%;
+      right: 12px;
+      transform: translateY(-50%);
+    }
+    .main {
+      flex-grow: 1;
+      display: flex;
+      flex-direction: column;
+      background: #f2f2f7;
+    }
+    .header {
+      background: white;
+      padding: 12px 16px;
+      font-weight: bold;
+      border-bottom: 1px solid #ccc;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .header img {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+    }
+    .messages {
+      flex-grow: 1;
+      padding: 16px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+    }
+    .timestamp-label {
+      text-align: center;
+      font-size: 12px;
+      color: #999;
+      margin: 10px 0;
+    }
+    .message {
+      max-width: 75%;
+      padding: 10px 15px;
+      margin-bottom: 10px;
+      border-radius: 20px;
+      font-size: 14px;
+      white-space: pre-wrap;
+    }
+    .agent { background-color: #e5e5ea; align-self: flex-start; color: black; }
+    .user { background-color: #34c759; align-self: flex-end; color: white; }
+    .input-box {
+      display: flex;
+      padding: 10px 16px;
+      background: white;
+      border-top: 1px solid #ccc;
+      align-items: center;
+    }
+    .input-box input {
+      flex: 1;
+      padding: 10px;
+      font-size: 14px;
+      border: none;
+      border-radius: 20px;
+      background: #eee;
+    }
+    .icon-button {
+      font-size: 24px;
+      background: none;
+      border: none;
+      color: #007aff;
+      margin-right: 10px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="sidebar">
+      <div class="thread active" id="agentforce-thread" onclick="switchThread('agentforce')">
+        <div class="left">
+          <div class="sender">Agentforce</div>
+          <div class="preview">Hi! I noticed a spike in your data usage...</div>
+        </div>
+        <div class="timestamp">Today</div>
+        <div class="unread-dot" id="unreadDot"></div>
+      </div>
+      <div class="thread" onclick="switchThread('dbs')">
+        <div class="left">
+          <div class="sender">DBS Bank</div>
+          <div class="preview">Successful FAST Funds Transfer: S$22000...</div>
+        </div>
+        <div class="timestamp">Jul 8</div>
+      </div>
+      <div class="thread" onclick="switchThread('shopee')"><div class="left"><div class="sender">Shopee</div><div class="preview">FLASH SALE! Up to 70% off electronics today only.</div></div><div class="timestamp">Jun 20</div></div>
+      <div class="thread" onclick="switchThread('singaporeair')"><div class="left"><div class="sender">SingaporeAir</div><div class="preview">Check-in now available for your flight SQ976 to Bangkok.</div></div><div class="timestamp">Jun 18</div></div>
+      <div class="thread" onclick="switchThread('amazon')"><div class="left"><div class="sender">Amazon</div><div class="preview">Your parcel SG12345678 has been delivered.</div></div><div class="timestamp">Jun 17</div></div>
+      <div class="thread" onclick="switchThread('lazada')"><div class="left"><div class="sender">Lazada</div><div class="preview">You’ve earned 500 coins. Redeem today!</div></div><div class="timestamp">Jun 16</div></div>
+      <div class="thread" onclick="switchThread('uob')"><div class="left"><div class="sender">UOB</div><div class="preview">Your OTP is 387213. Valid for 3 minutes.</div></div><div class="timestamp">Jun 15</div></div>
+      <div class="thread" onclick="switchThread('ocbc')"><div class="left"><div class="sender">OCBC</div><div class="preview">Balance alert: Your account balance is below S$100.</div></div><div class="timestamp">Jun 14</div></div>
+      <div class="thread" onclick="switchThread('revolut')"><div class="left"><div class="sender">Revolut</div><div class="preview">You spent S$12.99 at Toast Box.</div></div><div class="timestamp">Jun 13</div></div>
+      <div class="thread" onclick="switchThread('starhub')"><div class="left"><div class="sender">StarHub</div><div class="preview">Your bill of S$68.50 is due on 5 Jul. Pay online now.</div></div><div class="timestamp">Jun 12</div></div>
+      <div class="thread" onclick="switchThread('medisave')"><div class="left"><div class="sender">MediSave</div><div class="preview">Your claim of S$450 has been processed successfully.</div></div><div class="timestamp">Jun 11</div></div>
+      <div class="thread" onclick="switchThread('smsverify')"><div class="left"><div class="sender">SmsVerify</div><div class="preview">Your verification code is: 598630</div></div><div class="timestamp">Jun 10</div></div>
+    </div>
+    <div class="main">
+      <div class="header">
+        <img src="agentforce-logo.png" alt="Agentforce">
+        To: <span id="chatHeader">Agentforce</span>
+      </div>
+      <div class="messages" id="chatBox"></div>
+      <div class="input-box">
+        <button class="icon-button">＋</button>
+        <input type="text" id="userInput" placeholder="Type a message..." onkeydown="handleKey(event)">
+      </div>
+    </div>
+  </div>
+  <script>
+    let stepIndex = 1;
+    let conversationSteps = [];
+    let currentThread = 'agentforce';
+
+    const dbsMessages = [
+      { date: 'Thu, Jun 27 at 6:42 PM', text: "You've added AMERICAN EXPRESS INTL INC (Bill Ref No: XXXXXXXXXX112002) as your biller on 27/02. If unauthorised, call DBS hotline." },
+      { date: 'Thu, Jun 27 at 7:42 PM', text: "Successful FAST Funds Transfer: S$22000.00 from A/C ending 1086 to Narsana Mitesh (A/C ending 7577), 27 Feb 19:42 (SGT). If unauthorised, call DBS hotline." },
+      { date: 'Fri, Jun 28 at 2:54 PM', text: "Successful PayNow: S$2000.00 from A/C ending 1086 to WISE ASIA-PACIFIC PTE LTD (VPA starting UEN201), 28 Feb 15:54 SGT. If unauthorised, call DBS hotline." },
+      { date: 'Sun, Jun 9 at 6:57 AM', text: "Successful FAST Funds Transfer: S$5000.00 to OCBC Bank. If this was not you, please call DBS hotline immediately." },
+      { date: 'Wed, Jun 12 at 8:30 AM', text: "Reminder: Your credit card payment of S$1200 is due today. Pay via digibank to avoid charges." },
+      { date: 'Fri, Jun 14 at 6:12 PM', text: "DBS Alert: Transaction of S$99.00 at AMAZON SG. If unauthorised, call DBS hotline." },
+      { date: 'Mon, Jun 17 at 10:02 AM', text: "Your eStatement for February 2025 is now available in digibank." },
+      { date: 'Tue, Jun 18 at 3:47 PM', text: "SGD 800 withdrawn from ATM at Raffles Place. Balance: S$8,500.00." },
+      { date: 'Wed, Jun 19 at 9:05 AM', text: "You’ve earned 120 DBS Points this month. Redeem now in DBS Rewards." },
+      { date: 'Thu, Jun 20 at 4:20 PM', text: "Successful transaction: S$10.00 at Toast Box." }
+    ];
+
+    window.onload = async function () {
+      const res = await fetch('conversation.json');
+      const data = await res.json();
+      conversationSteps = data.steps;
+      loadAgentforce();
+    };
+
+    function loadAgentforce() {
+      clearChatBox();
+      document.getElementById('chatHeader').textContent = 'Agentforce';
+      addMessage(conversationSteps[0], 'agent');
+    }
+
+    function loadDBS() {
+      clearChatBox();
+      document.getElementById('chatHeader').textContent = 'DBS Bank';
+      dbsMessages.forEach(({ date, text }) => {
+        const timeStamp = document.createElement('div');
+        timeStamp.className = 'timestamp-label';
+        timeStamp.textContent = date;
+        document.getElementById('chatBox').appendChild(timeStamp);
+        addMessage(text, 'agent');
+      });
+    }
+
+    function switchThread(thread) {
+      currentThread = thread;
+      if (thread === 'agentforce') loadAgentforce();
+      else if (thread === 'dbs') loadDBS();
+    }
+
+    function clearChatBox() {
+      const chatBox = document.getElementById('chatBox');
+      chatBox.innerHTML = '';
+    }
+
+    function handleKey(e) {
+      if (e.key === 'Enter') {
+        const input = document.getElementById('userInput');
+        const text = input.value.trim();
+        if (!text || currentThread !== 'agentforce') return;
+
+        addMessage(text, 'user');
+        respondToNextStep();
+        input.value = '';
+        clearUnread();
+      }
+    }
+
+    function addMessage(text, sender) {
+      const chatBox = document.getElementById('chatBox');
+      const msg = document.createElement('div');
+      msg.className = 'message ' + sender;
+      msg.textContent = text;
+      chatBox.appendChild(msg);
+      chatBox.scrollTop = chatBox.scrollHeight;
+    }
+
+    function respondToNextStep() {
+  if (stepIndex < conversationSteps.length) {
+    const delay = Math.random() * 1000 + 2000; // 2–3 seconds
+    setTimeout(() => {
+      addMessage(conversationSteps[stepIndex], 'agent');
+      stepIndex++;
+    }, delay);
+  }
+}
+
+
+    function clearUnread() {
+      const dot = document.getElementById('unreadDot');
+      if (dot) {
+        dot.style.display = 'none';
+        const thread = document.getElementById('agentforce-thread');
+        if (thread) thread.classList.remove('unread');
+      }
+    }
+  </script>
+</body>
+</html>

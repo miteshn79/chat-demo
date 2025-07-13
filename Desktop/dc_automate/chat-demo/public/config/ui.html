@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Agentforce Demo Configurator</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+      padding: 20px;
+      max-width: 700px;
+      margin: auto;
+    }
+    h1 {
+      font-size: 24px;
+      margin-bottom: 10px;
+    }
+    label {
+      display: block;
+      margin-top: 20px;
+      font-weight: bold;
+    }
+    input, textarea {
+      width: 100%;
+      padding: 10px;
+      margin-top: 5px;
+      font-size: 14px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+    }
+    textarea {
+      height: 100px;
+    }
+    button {
+      margin-top: 20px;
+      padding: 10px 20px;
+      font-size: 14px;
+      background-color: #007aff;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    #output {
+      margin-top: 20px;
+      font-family: monospace;
+    }
+  </style>
+</head>
+<body>
+  <h1>Agentforce Demo Builder</h1>
+
+  <label for="demoName">Conversation ID</label>
+  <input type="text" id="demoName" placeholder="e.g. foreign-txn-alert">
+
+  <label for="steps">Agent Responses (One per line)</label>
+  <textarea id="steps" placeholder="Hi! We noticed a foreign transaction on your card.\nWas this you?\nReply YES or NO..."></textarea>
+
+  <button onclick="generateJSON()">Generate Demo</button>
+
+  <div id="output"></div>
+
+  <script>
+    async function generateJSON() {
+      const demoName = document.getElementById('demoName').value.trim();
+      const stepsText = document.getElementById('steps').value.trim();
+
+      if (!demoName || !stepsText) {
+        alert('Please fill out both fields');
+        return;
+      }
+
+      const steps = stepsText.split('\n').map(s => s.trim()).filter(Boolean);
+      const json = { steps };
+
+      try {
+        const res = await fetch('/save-json', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ fileName: demoName, content: json })
+        });
+
+        if (!res.ok) throw new Error('Failed to save JSON');
+
+        const result = await res.json();
+        document.getElementById('output').innerHTML = `
+          <p><strong>Saved config:</strong> ${result.path}</p>
+          <p><strong>Launch demo:</strong> 
+            <a href="/config/index.html?demo=${demoName}" target="_blank">/index.html?demo=${demoName}</a>
+          </p>
+        `;
+      } catch (error) {
+        alert('Error saving file: ' + error.message);
+      }
+    }
+  </script>
+</body>
+</html>
